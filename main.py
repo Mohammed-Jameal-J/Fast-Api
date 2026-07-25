@@ -1,10 +1,10 @@
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI , Query , Path
 
 emp=[
     {"id": 1, "name": "John Doe"},
-    {"id": 2, "name": "Jane Smith"}
+    {"id": 2, "name": "Jane"}
 ]
 
 app = FastAPI()
@@ -17,7 +17,7 @@ def read_root():
 
 # path parameters
 @app.get("/display/{id}")
-def read_item(id: int):
+def read_item(id: int = Path(ge=1,le=100)):
     for employee in emp:
         if employee["id"] == id:
             return employee
@@ -25,14 +25,25 @@ def read_item(id: int):
 
 #output: http://host:8000/display/1
 
-
-# query parameters
-@app.get("/display/query")
-def read_query(id: int):
+@app.get("/display/{id}/{name}")
+def read_item(id: int = Path(ge=1,le=100, multiple_of=1), name: str = Path(pattern="^[a-zA-Z]+$")):
     for employee in emp:
-            if employee["id"] == id:
-                return employee
-            return {"error": "Employee not found"}
+        if employee["id"] == id and employee["name"].lower() == name.lower():
+            return employee
+    return {"error": "Employee not found"}
+
+
+# query parameters , validation 
+@app.get("/display/query")
+def read_query(id: int = Query(ge=1, le=100, multiple_of=1)):
+    for employee in emp:
+        if employee["id"] == id:
+            return employee
+
+    return {"error": "Employee not found"}
+
+
+
 
 #output: http://host:8000/display/query?id=1
 
